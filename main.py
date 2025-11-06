@@ -2,6 +2,7 @@ import networkx as nx
 import random
 import string
 from typing import List, Dict, Tuple
+from scipy.stats import spearmanr
 
 def compute_ranking(graph: nx.DiGraph) -> List[Tuple[str, float]]:
     total_losses: Dict[str, float] = {}
@@ -42,9 +43,36 @@ def create_directed_weighted_graph(edges=None) -> nx.DiGraph:
 
 if __name__ == "__main__":
     players: List[str] = list(string.ascii_uppercase)
+    
     edges: List[Tuple[str, str, float]] = generate_random_edges(players, min_weight=0, max_weight=20)
-    G: nx.Graph = create_directed_weighted_graph(edges)
-    node_ranking: List[Tuple[str, float]] = compute_ranking(G)
+    G: nx.DiGraph = create_directed_weighted_graph(edges)
+    
+    custom_node_ranking: List[Tuple[str, float]] = compute_ranking(G)
+    
+    hubs, authorities = nx.hits(G, max_iter=100, tol=1e-08)
+    hubs_ranking = sorted(hubs.items(), key=lambda x: x[1], reverse=True)
 
-    for node, score in node_ranking:
-        print(f"{node}: {score:.3f}")
+    print("Rank | Your Ranking  | HITS Hub Score")
+    print("---------------------------------------")
+    for i in range(len(players)):
+        print(f"{i+1:<4} | {custom_node_ranking[i][0]}: {custom_node_ranking[i][1]:.3f}   | {hubs_ranking[i][0]}: {hubs_ranking[i][1]:.3f}")
+
+    print("\n" + "="*30)
+    print("Ranking Similarity Analysis")
+    print("="*30)
+
+    custom_node_ranking_scores = dict(custom_node_ranking)
+    my_aligned_scores = [custom_node_ranking_scores[player] for player in players]
+    hits_aligned_scores = [hubs[player] for player in players]
+    correlation, p_value = spearmanr(my_aligned_scores, hits_aligned_scores)
+
+    print(f"Spearman's Rank Correlation: {correlation:.4f}")
+    
+    if correlation > 0.9:
+        print("Result: The rankings are EXTREMELY similar.")
+    elif correlation > 0.7:
+        print("Result: The rankings are VERY similar.")
+    elif correlation > 0.5:
+        print("Result: The rankings are MODERATELY similar.")
+    else:
+        print("Result: The rankings are not very similar.")

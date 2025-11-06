@@ -52,7 +52,7 @@ if __name__ == "__main__":
     hubs, authorities = nx.hits(G, max_iter=100, tol=1e-08)
     hubs_ranking = sorted(hubs.items(), key=lambda x: x[1], reverse=True)
 
-    print("Rank | Your Ranking  | HITS Hub Score")
+    print("Rank | Custom Ranking  | HITS Hub Score")
     print("---------------------------------------")
     for i in range(len(players)):
         print(f"{i+1:<4} | {custom_node_ranking[i][0]}: {custom_node_ranking[i][1]:.3f}   | {hubs_ranking[i][0]}: {hubs_ranking[i][1]:.3f}")
